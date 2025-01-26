@@ -29,6 +29,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.nba.schedule.R
@@ -67,8 +68,12 @@ internal fun SchedulesScreen(
                     MatchCard(
                         item = schedules[index],
                     )
-                    val instant = Instant.parse(schedules[index].gameDate) // Parse the ISO-8601 date string
-                    val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault()) // Convert to LocalDateTime in the system's default timezone
+                    val instant =
+                        Instant.parse(schedules[index].gameDate) // Parse the ISO-8601 date string
+                    val localDateTime = LocalDateTime.ofInstant(
+                        instant,
+                        ZoneId.systemDefault()
+                    ) // Convert to LocalDateTime in the system's default timezone
                     displayMonth = localDateTime
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -185,6 +190,16 @@ fun MatchCard(
 
 
         Spacer(modifier = Modifier.height(12.dp))
+
+        Text(
+            text = item.arena,
+            color = Color.White,
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        )
 
         //Home team and Away team
         Row(

@@ -12,14 +12,17 @@ import com.nba.schedule.model.TeamsResponse
 import com.nba.schedule.model.UiModel
 import com.nba.schedule.model.toScheduleUi
 import com.nba.schedule.model.toTeamsUi
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
-class MainViewModel(application: Application) : AndroidViewModel(application) {
+@HiltViewModel
+class MainViewModel @Inject constructor(application: Application) : AndroidViewModel(application) {
 
     private val localScheduleData =
         application.assets.open("schedule.json").bufferedReader().use { it.readText() }
@@ -57,6 +60,26 @@ class MainViewModel(application: Application) : AndroidViewModel(application) {
                 _teamData.update { finalTeam.data?.teams }
             } catch (e: Exception) {
                 e.printStackTrace()
+            }
+        }
+    }
+
+    fun search(key: String) {
+        val finalSchedule = Gson().fromJson(localScheduleData, ScheduleResponse::class.java)
+        if (key.isEmpty()) {
+            _scheduleData.update { finalSchedule.data?.schedules }
+            return
+        }
+        viewModelScope.launch {
+            _scheduleData.update {
+                finalSchedule.data?.schedules?.filter {
+                    it.homeTeam.teamName.contains(key, true) ||
+                            it.homeTeam.city.contains(key, true) ||
+                            it.visitingTeam.teamName.contains(key, true) ||
+                            it.visitingTeam.city.contains(key, true) ||
+                            it.arenaName.contains(key, true) ||
+                            it.arenaCity.contains(key, true)
+                }
             }
         }
     }

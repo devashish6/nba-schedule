@@ -18,6 +18,7 @@ data class ScheduleUi(
     val canBuy: Boolean, //To show and hide button
     val homeTeamUi: TeamUi,
     val awayTeamUi: TeamUi,
+    val arena: String,
 )
 
 fun Schedule.toScheduleUi(teamList: List<TeamUi>): ScheduleUi {
@@ -36,6 +37,7 @@ fun Schedule.toScheduleUi(teamList: List<TeamUi>): ScheduleUi {
         formattedDate = formatDate(gameTime),
         gameDate = gameTime,
         startTime = startTime,
+        arena = arenaName,
         homeTeamUi = TeamUi(
             teamId = homeTeam.teamId,
             teamName = home?.teamName.orEmpty(),
