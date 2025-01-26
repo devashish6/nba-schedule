@@ -21,8 +21,6 @@ import kotlinx.coroutines.launch
 
 class MainViewModel(application: Application) : AndroidViewModel(application) {
 
-//    private val _homeTeam = "MIAMI"
-
     private val localScheduleData =
         application.assets.open("schedule.json").bufferedReader().use { it.readText() }
     private val localTeamsData =
