@@ -69,11 +69,11 @@ internal fun SchedulesScreen(
                         item = schedules[index],
                     )
                     val instant =
-                        Instant.parse(schedules[index].gameDate) // Parse the ISO-8601 date string
+                        Instant.parse(schedules[index].gameDate)
                     val localDateTime = LocalDateTime.ofInstant(
                         instant,
                         ZoneId.systemDefault()
-                    ) // Convert to LocalDateTime in the system's default timezone
+                    )
                     displayMonth = localDateTime
                     Spacer(modifier = Modifier.height(12.dp))
                 }
@@ -275,7 +275,6 @@ fun MatchCard(
 
             }
         }
-
     }
 
 }
