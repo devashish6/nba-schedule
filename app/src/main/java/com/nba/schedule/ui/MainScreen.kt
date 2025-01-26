@@ -1,6 +1,5 @@
 package com.nba.schedule.ui
 
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,54 +11,32 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.compose.AsyncImage
-import coil.imageLoader
-import coil.request.ImageRequest
 import com.google.gson.Gson
 import com.nba.schedule.R
 import com.nba.schedule.model.ScheduleResponse
-import com.nba.schedule.model.ScheduleUi
 import com.nba.schedule.model.UiModel
 import com.nba.schedule.model.toScheduleUi
 import kotlinx.coroutines.launch
-import java.time.Instant
-import java.time.LocalDateTime
-import java.time.ZoneId
-import java.time.format.DateTimeFormatter
 
 /**
 1. H -> Team 1 -> Home team right
@@ -153,232 +130,17 @@ fun MainScreen(
                         )
                     }
 
-                    //Games Screen
+                    //Teams Screen
                     1 -> {
+                        TeamsScreen(
+                            teams = uiModel.teamsList
+                        )
 
                     }
                 }
 
             }
         )
-    }
-
-}
-
-@Composable
-private fun SchedulesScreen(
-    schedules: List<ScheduleUi>?,
-) {
-    var displayMonth by remember {
-        mutableStateOf(LocalDateTime.now())
-    }
-
-    Column {
-        Spacer(modifier = Modifier.height(10.dp))
-        CalendarView(
-            displayMonth = displayMonth,
-            onNext = {
-                displayMonth = displayMonth.plusMonths(1)
-            }
-        ) {
-            displayMonth = displayMonth.minusMonths(1)
-        }
-        if (schedules != null) {
-            LazyColumn(
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                userScrollEnabled = true
-            ) {
-                items(schedules.size) { index ->
-                    MatchCard(
-                        item = schedules[index],
-                    )
-                    val instant = Instant.parse(schedules[index].gameDate) // Parse the ISO-8601 date string
-                    val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault()) // Convert to LocalDateTime in the system's default timezone
-                    displayMonth = localDateTime
-                    Spacer(modifier = Modifier.height(12.dp))
-                }
-            }
-        }
-
-    }
-}
-
-@Composable
-fun CalendarView(
-    displayMonth: LocalDateTime,
-    onNext: () -> Unit,
-    onPrevious: () -> Unit
-) {
-    Column(
-        modifier = Modifier
-            .background(Color(0xFF1F1D1B))
-            .fillMaxWidth(),
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center,
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.CenterHorizontally)
-        ) {
-            Image(
-                painter = painterResource(id = R.drawable.up),
-                contentDescription = "Up",
-                colorFilter = ColorFilter.tint(Color.White),
-                modifier = Modifier.clickable {
-                    onNext()
-                }
-            )
-            Text(
-                text = displayMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
-                fontSize = 18.sp,
-                color = Color.White
-            )
-            Image(
-                painter = painterResource(id = R.drawable.down),
-                contentDescription = "Up",
-                colorFilter = ColorFilter.tint(Color.White),
-                modifier = Modifier.clickable {
-                    onPrevious()
-                }
-            )
-        }
-    }
-}
-
-
-@Composable
-fun MatchCard(
-    item: ScheduleUi,
-) {
-    Column(
-        modifier = Modifier
-            .clip(RoundedCornerShape(16.dp))
-            .background(Color(0xFF27292B))
-            .padding(12.dp)
-            .fillMaxWidth()
-    ) {
-
-        //Match info.
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            Text(
-                text = if (item.isHomeMatch) stringResource(id = R.string.home) else stringResource(
-                    id = R.string.away
-                ),
-                color = Color.White,
-                fontSize = 16.sp
-            )
-            Text(
-                text = "|",
-                color = Color.DarkGray,
-                fontSize = 18.sp,
-                modifier = Modifier.padding(horizontal = 4.dp)
-            )
-            Text(
-                text = item.formattedDate,
-                color = Color.White,
-                fontSize = 16.sp
-            )
-            Text(
-                text = "|",
-                color = Color.DarkGray,
-                fontSize = 18.sp,
-                modifier = Modifier.padding(horizontal = 4.dp)
-            )
-            Text(
-                text = item.startTime,
-                color = Color.White,
-                fontSize = 16.sp
-            )
-        }
-
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        //Home team and Away team
-
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .align(Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.Center
-        ) {
-            if (item.gameStatus == 1) {
-                HorizontalTeamCard(
-                    teamLogo = item.awayTeamUi.teamLogo,
-                    teamName = item.awayTeamUi.teamDisplayName
-                )
-            } else {
-                VerticalTeamCard(
-                    teamLogo = item.awayTeamUi.teamLogo,
-                    teamName = item.awayTeamUi.teamDisplayName
-                )
-            }
-
-            if (item.awayTeamUi.score != "0") {
-                Text(
-                    text = item.awayTeamUi.score,
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-            }
-            Text(
-                text = if (item.isHomeMatch) "VS" else "@",
-                color = Color.White,
-                fontSize = 18.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            if (item.homeTeamUi.score != "0") {
-                Text(
-                    text = item.homeTeamUi.score,
-                    color = Color.White,
-                    fontSize = 24.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp)
-                )
-            }
-
-            if (item.gameStatus == 1) {
-                HorizontalTeamCard(
-                    teamLogo = item.homeTeamUi.teamLogo,
-                    teamName = item.homeTeamUi.teamDisplayName
-                )
-            } else {
-                VerticalTeamCard(
-                    teamLogo = item.homeTeamUi.teamLogo,
-                    teamName = item.homeTeamUi.teamDisplayName
-                )
-            }
-        }
-
-        Spacer(modifier = Modifier.height(12.dp))
-
-        if (item.isHomeMatch && item.gameStatus != 3) {
-            Button(
-                onClick = { },
-                shape = RoundedCornerShape(24.dp),
-                modifier = Modifier.fillMaxWidth(),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color.White,
-                )
-            ) {
-                Text(
-                    text = "BUY TICKETS ON ticketmaster",
-                    color = Color.Black
-                )
-
-            }
-        }
-
     }
 
 }
@@ -396,67 +158,11 @@ fun ToolBar() {
     )
 }
 
-@Composable
-fun VerticalTeamCard(
-    teamLogo: String,
-    teamName: String,
-) {
-    Column {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(teamLogo)
-                .crossfade(true)
-                .build(),
-            contentDescription = "",
-            imageLoader = LocalContext.current.imageLoader,
-            placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
-            error = painterResource(id = R.drawable.ic_launcher_foreground),
-            modifier = Modifier
-                .size(48.dp)
-        )
-        Spacer(Modifier.height(4.dp))
-        Text(
-            text = teamName,
-            color = Color.White,
-            fontSize = 24.sp,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
-    }
-}
 
-@Composable
-fun HorizontalTeamCard(
-    teamLogo: String,
-    teamName: String,
-) {
-    Row(
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        AsyncImage(
-            model = ImageRequest.Builder(LocalContext.current)
-                .data(teamLogo)
-                .crossfade(true)
-                .build(),
-            contentDescription = "",
-            imageLoader = LocalContext.current.imageLoader,
-            placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
-            error = painterResource(id = R.drawable.ic_launcher_foreground),
-            modifier = Modifier
-                .size(48.dp)
-        )
-        Spacer(Modifier.width(4.dp))
-        Text(
-            text = teamName,
-            color = Color.White,
-            fontSize = 24.sp,
-            modifier = Modifier.padding(horizontal = 8.dp)
-        )
-    }
-}
 
 @Preview
 @Composable
-private fun ConcatMapXMainSubscriber() {
+private fun MainScreenPreview() {
     val context = LocalContext.current
     val localScheduleData =
         context.assets.open("schedule.json").bufferedReader().use { it.readText() }

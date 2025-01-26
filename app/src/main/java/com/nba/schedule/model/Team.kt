@@ -6,6 +6,7 @@ data class TeamUi(
     val teamDisplayName: String,
     val teamLogo: String,
     val score: String,
+    val color: String,
 )
 
 fun Team.toTeamsUi() = TeamUi(
@@ -13,5 +14,6 @@ fun Team.toTeamsUi() = TeamUi(
     teamName = teamName,
     teamDisplayName = abbreviation,
     teamLogo = logoUrl,
+    color = color,
     score = ""
 )

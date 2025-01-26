@@ -41,6 +41,7 @@ fun Schedule.toScheduleUi(teamList: List<TeamUi>): ScheduleUi {
             teamName = home?.teamName.orEmpty(),
             teamLogo = home?.teamLogo.orEmpty(),
             teamDisplayName = home?.teamDisplayName.orEmpty(),
+            color = home?.color.orEmpty(),
             score = homeTeam.score
         ),
         awayTeamUi = TeamUi(
@@ -48,6 +49,7 @@ fun Schedule.toScheduleUi(teamList: List<TeamUi>): ScheduleUi {
             teamName = awayTeam?.teamName.orEmpty(),
             teamLogo = awayTeam?.teamLogo.orEmpty(),
             teamDisplayName = awayTeam?.teamDisplayName.orEmpty(),
+            color = awayTeam?.color.orEmpty(),
             score = visitingTeam.score
         ),
         canBuy = buyTicketUrl.isNullOrEmpty()
