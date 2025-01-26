@@ -1,7 +1,5 @@
 package com.nba.schedule.ui
 
-import android.util.Log
-import android.widget.ImageButton
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -22,13 +20,9 @@ import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults.SecondaryIndicator
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
@@ -44,7 +38,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
@@ -53,7 +46,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil.ImageLoader
 import coil.compose.AsyncImage
 import coil.imageLoader
 import coil.request.ImageRequest
@@ -64,7 +56,9 @@ import com.nba.schedule.model.ScheduleUi
 import com.nba.schedule.model.UiModel
 import com.nba.schedule.model.toScheduleUi
 import kotlinx.coroutines.launch
-import java.time.LocalDate
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 
 /**
@@ -175,19 +169,33 @@ fun MainScreen(
 private fun SchedulesScreen(
     schedules: List<ScheduleUi>?,
 ) {
+    var displayMonth by remember {
+        mutableStateOf(LocalDateTime.now())
+    }
+
     Column {
         Spacer(modifier = Modifier.height(10.dp))
-        CalendarView()
+        CalendarView(
+            displayMonth = displayMonth,
+            onNext = {
+                displayMonth = displayMonth.plusMonths(1)
+            }
+        ) {
+            displayMonth = displayMonth.minusMonths(1)
+        }
         if (schedules != null) {
             LazyColumn(
                 modifier = Modifier.fillMaxSize(),
                 contentPadding = PaddingValues(16.dp),
                 userScrollEnabled = true
             ) {
-                items(schedules.size) {
+                items(schedules.size) { index ->
                     MatchCard(
-                        item = schedules[it],
+                        item = schedules[index],
                     )
+                    val instant = Instant.parse(schedules[index].gameDate) // Parse the ISO-8601 date string
+                    val localDateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault()) // Convert to LocalDateTime in the system's default timezone
+                    displayMonth = localDateTime
                     Spacer(modifier = Modifier.height(12.dp))
                 }
             }
@@ -197,9 +205,11 @@ private fun SchedulesScreen(
 }
 
 @Composable
-fun CalendarView() {
-    var currentDate by remember { mutableStateOf(LocalDate.now()) }
-
+fun CalendarView(
+    displayMonth: LocalDateTime,
+    onNext: () -> Unit,
+    onPrevious: () -> Unit
+) {
     Column(
         modifier = Modifier
             .background(Color(0xFF1F1D1B))
@@ -218,11 +228,11 @@ fun CalendarView() {
                 contentDescription = "Up",
                 colorFilter = ColorFilter.tint(Color.White),
                 modifier = Modifier.clickable {
-                    currentDate = currentDate.plusMonths(1)
+                    onNext()
                 }
             )
             Text(
-                text = currentDate.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
+                text = displayMonth.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
                 fontSize = 18.sp,
                 color = Color.White
             )
@@ -231,7 +241,7 @@ fun CalendarView() {
                 contentDescription = "Up",
                 colorFilter = ColorFilter.tint(Color.White),
                 modifier = Modifier.clickable {
-                    currentDate = currentDate.minusMonths(1)
+                    onPrevious()
                 }
             )
         }
@@ -273,7 +283,7 @@ fun MatchCard(
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
             Text(
-                text = item.gameDate,
+                text = item.formattedDate,
                 color = Color.White,
                 fontSize = 16.sp
             )

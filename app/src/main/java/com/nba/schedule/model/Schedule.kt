@@ -12,6 +12,7 @@ data class ScheduleUi(
     val year: Int,
     val teamCity: String,
     val isHomeMatch: Boolean = false,
+    val formattedDate: String, //Match date
     val gameDate: String, //Match date
     val startTime: String, //Match time
     val canBuy: Boolean, //To show and hide button
@@ -32,7 +33,8 @@ fun Schedule.toScheduleUi(teamList: List<TeamUi>): ScheduleUi {
         year = year,
         teamCity = homeTeam.city,
         isHomeMatch = homeTeam.city.equals("Miami", ignoreCase = true),
-        gameDate = formatDate(gameTime),
+        formattedDate = formatDate(gameTime),
+        gameDate = gameTime,
         startTime = startTime,
         homeTeamUi = TeamUi(
             teamId = homeTeam.teamId,
