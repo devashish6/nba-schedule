@@ -1,5 +1,8 @@
 package com.nba.schedule.ui
 
+import android.util.Log
+import android.widget.ImageButton
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,6 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.PageSize
 import androidx.compose.foundation.pager.PagerDefaults
@@ -37,41 +43,55 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import coil3.compose.AsyncImage
-import coil3.imageLoader
+import coil.ImageLoader
+import coil.compose.AsyncImage
+import coil.imageLoader
+import coil.request.ImageRequest
+import com.google.gson.Gson
 import com.nba.schedule.R
+import com.nba.schedule.model.ScheduleResponse
+import com.nba.schedule.model.ScheduleUi
+import com.nba.schedule.model.UiModel
+import com.nba.schedule.model.toScheduleUi
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
 /**
- 1. H -> Team 1 -> Home team right
- 2. V -> Team 2 -> Visitor team -> left
- 3. S -> Score (inside H and V obj)
- 4. st -> 1,2,3 (Next, Live and Past)
- 5. year -> year
- 6. gametime -> game time
- 7. buy_ticket_url -> if null hide else show button
+1. H -> Team 1 -> Home team right
+2. V -> Team 2 -> Visitor team -> left
+3. S -> Score (inside H and V obj)
+4. st -> 1,2,3 (Next, Live and Past)
+5. year -> year
+6. gametime -> game time
+7. buy_ticket_url -> if null hide else show button
  **/
 
 @Composable
-private fun MainScreenRoute() {
+private fun MainScreenRoute(
+) {
 
 
 }
 
 @Composable
-private fun MainScreen() {
+fun MainScreen(
+    uiModel: UiModel
+) {
     val pagerState = rememberPagerState { 2 }
     val scope = rememberCoroutineScope()
-    val tabNames = listOf("Schedules", "Games")
+    val tabNames =
+        listOf(stringResource(id = R.string.schedules), stringResource(id = R.string.games))
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -134,7 +154,9 @@ private fun MainScreen() {
                 when (page) {
                     //Schedules Screen
                     0 -> {
-                        SchedulesScreen()
+                        SchedulesScreen(
+                            schedules = uiModel.scheduleList
+                        )
                     }
 
                     //Games Screen
@@ -150,16 +172,27 @@ private fun MainScreen() {
 }
 
 @Composable
-private fun SchedulesScreen() {
-    Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(horizontal = 16.dp)
-    ) {
+private fun SchedulesScreen(
+    schedules: List<ScheduleUi>?,
+) {
+    Column {
         Spacer(modifier = Modifier.height(10.dp))
         CalendarView()
-        Spacer(modifier = Modifier.height(10.dp))
-        MatchCard()
+        if (schedules != null) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                contentPadding = PaddingValues(16.dp),
+                userScrollEnabled = true
+            ) {
+                items(schedules.size) {
+                    MatchCard(
+                        item = schedules[it],
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                }
+            }
+        }
+
     }
 }
 
@@ -180,25 +213,27 @@ fun CalendarView() {
                 .fillMaxWidth()
                 .align(Alignment.CenterHorizontally)
         ) {
-            IconButton(onClick = { currentDate = currentDate.minusMonths(1) }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
-                    contentDescription = "Previous Month",
-                    tint = Color.White
-                )
-            }
+            Image(
+                painter = painterResource(id = R.drawable.up),
+                contentDescription = "Up",
+                colorFilter = ColorFilter.tint(Color.White),
+                modifier = Modifier.clickable {
+                    currentDate = currentDate.plusMonths(1)
+                }
+            )
             Text(
                 text = currentDate.format(DateTimeFormatter.ofPattern("MMMM yyyy")),
                 fontSize = 18.sp,
                 color = Color.White
             )
-            IconButton(onClick = { currentDate = currentDate.plusMonths(1) }) {
-                Icon(
-                    imageVector = Icons.AutoMirrored.Default.KeyboardArrowRight,
-                    contentDescription = "Next Month",
-                    tint = Color.White
-                )
-            }
+            Image(
+                painter = painterResource(id = R.drawable.down),
+                contentDescription = "Up",
+                colorFilter = ColorFilter.tint(Color.White),
+                modifier = Modifier.clickable {
+                    currentDate = currentDate.minusMonths(1)
+                }
+            )
         }
     }
 }
@@ -206,7 +241,7 @@ fun CalendarView() {
 
 @Composable
 fun MatchCard(
-
+    item: ScheduleUi,
 ) {
     Column(
         modifier = Modifier
@@ -214,7 +249,6 @@ fun MatchCard(
             .background(Color(0xFF27292B))
             .padding(12.dp)
             .fillMaxWidth()
-
     ) {
 
         //Match info.
@@ -226,7 +260,9 @@ fun MatchCard(
             horizontalArrangement = Arrangement.Center
         ) {
             Text(
-                text = "AWAY",
+                text = if (item.isHomeMatch) stringResource(id = R.string.home) else stringResource(
+                    id = R.string.away
+                ),
                 color = Color.White,
                 fontSize = 16.sp
             )
@@ -237,7 +273,7 @@ fun MatchCard(
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
             Text(
-                text = "SAT JUL 01",
+                text = item.gameDate,
                 color = Color.White,
                 fontSize = 16.sp
             )
@@ -248,7 +284,7 @@ fun MatchCard(
                 modifier = Modifier.padding(horizontal = 4.dp)
             )
             Text(
-                text = "FINAL",
+                text = item.startTime,
                 color = Color.White,
                 fontSize = 16.sp
             )
@@ -258,6 +294,7 @@ fun MatchCard(
         Spacer(modifier = Modifier.height(12.dp))
 
         //Home team and Away team
+
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -265,78 +302,71 @@ fun MatchCard(
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Center
         ) {
-            Column {
-                AsyncImage(
-                    model = "Image Url",
-                    contentDescription = "",
-                    imageLoader = LocalContext.current.imageLoader,
-                    placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
-                    modifier = Modifier
-                        .height(48.dp)
-                        .padding(horizontal = 8.dp)
+            if (item.gameStatus == 1) {
+                HorizontalTeamCard(
+                    teamLogo = item.awayTeamUi.teamLogo,
+                    teamName = item.awayTeamUi.teamDisplayName
                 )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    "MIA",
-                    color = Color.White,
-                    fontSize = 22.sp,
-                    modifier = Modifier.padding(horizontal = 8.dp)
+            } else {
+                VerticalTeamCard(
+                    teamLogo = item.awayTeamUi.teamLogo,
+                    teamName = item.awayTeamUi.teamDisplayName
                 )
             }
 
+            if (item.awayTeamUi.score != "0") {
+                Text(
+                    text = item.awayTeamUi.score,
+                    color = Color.White,
+                    fontSize = 24.sp,
+                    modifier = Modifier.padding(horizontal = 8.dp)
+                )
+            }
             Text(
-                "120",
-                color = Color.White,
-                fontSize = 24.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            Text(
-                text = "@",
+                text = if (item.isHomeMatch) "VS" else "@",
                 color = Color.White,
                 fontSize = 18.sp,
                 modifier = Modifier.padding(horizontal = 8.dp)
             )
-            Text(
-                "102",
-                color = Color.White,
-                fontSize = 24.sp,
-                modifier = Modifier.padding(horizontal = 8.dp)
-            )
-            Column {
-                AsyncImage(
-                    model = "Image Url",
-                    contentDescription = "",
-                    imageLoader = LocalContext.current.imageLoader,
-                    placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
-                    modifier = Modifier
-                        .height(48.dp)
-                        .padding(horizontal = 8.dp)
-                )
-                Spacer(Modifier.height(4.dp))
+            if (item.homeTeamUi.score != "0") {
                 Text(
-                    "WAS",
+                    text = item.homeTeamUi.score,
                     color = Color.White,
                     fontSize = 24.sp,
                     modifier = Modifier.padding(horizontal = 8.dp)
+                )
+            }
+
+            if (item.gameStatus == 1) {
+                HorizontalTeamCard(
+                    teamLogo = item.homeTeamUi.teamLogo,
+                    teamName = item.homeTeamUi.teamDisplayName
+                )
+            } else {
+                VerticalTeamCard(
+                    teamLogo = item.homeTeamUi.teamLogo,
+                    teamName = item.homeTeamUi.teamDisplayName
                 )
             }
         }
 
         Spacer(modifier = Modifier.height(12.dp))
 
-        Button(
-            onClick = { },
-            shape = RoundedCornerShape(24.dp),
-            modifier = Modifier.fillMaxWidth(),
-            colors = ButtonDefaults.buttonColors(
-                containerColor = Color.White,
+        if (item.isHomeMatch && item.gameStatus != 3) {
+            Button(
+                onClick = { },
+                shape = RoundedCornerShape(24.dp),
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color.White,
                 )
-        ) {
-            Text(
-                text = "BUY TICKETS ON ticketmaster",
-                color = Color.Black
-            )
+            ) {
+                Text(
+                    text = "BUY TICKETS ON ticketmaster",
+                    color = Color.Black
+                )
 
+            }
         }
 
     }
@@ -356,8 +386,73 @@ fun ToolBar() {
     )
 }
 
+@Composable
+fun VerticalTeamCard(
+    teamLogo: String,
+    teamName: String,
+) {
+    Column {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(teamLogo)
+                .crossfade(true)
+                .build(),
+            contentDescription = "",
+            imageLoader = LocalContext.current.imageLoader,
+            placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+            error = painterResource(id = R.drawable.ic_launcher_foreground),
+            modifier = Modifier
+                .size(48.dp)
+        )
+        Spacer(Modifier.height(4.dp))
+        Text(
+            text = teamName,
+            color = Color.White,
+            fontSize = 24.sp,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+    }
+}
+
+@Composable
+fun HorizontalTeamCard(
+    teamLogo: String,
+    teamName: String,
+) {
+    Row(
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AsyncImage(
+            model = ImageRequest.Builder(LocalContext.current)
+                .data(teamLogo)
+                .crossfade(true)
+                .build(),
+            contentDescription = "",
+            imageLoader = LocalContext.current.imageLoader,
+            placeholder = painterResource(id = R.drawable.ic_launcher_foreground),
+            error = painterResource(id = R.drawable.ic_launcher_foreground),
+            modifier = Modifier
+                .size(48.dp)
+        )
+        Spacer(Modifier.width(4.dp))
+        Text(
+            text = teamName,
+            color = Color.White,
+            fontSize = 24.sp,
+            modifier = Modifier.padding(horizontal = 8.dp)
+        )
+    }
+}
+
 @Preview
 @Composable
 private fun ConcatMapXMainSubscriber() {
-    MainScreen()
+    val context = LocalContext.current
+    val localScheduleData =
+        context.assets.open("schedule.json").bufferedReader().use { it.readText() }
+    val finalSchedule = Gson().fromJson(localScheduleData, ScheduleResponse::class.java)
+    val list = finalSchedule.data?.schedules?.map { it.toScheduleUi(emptyList()) }
+    MainScreen(
+        uiModel = UiModel(scheduleList = list)
+    )
 }
